@@ -66,14 +66,14 @@
   elements.next?.addEventListener("click", goNext);
   elements.saveExit?.addEventListener("click", saveAndExit);
   elements.copyTemplate?.addEventListener("click", copyCurrentTemplate);
-  elements.print?.addEventListener("click", () => window.print());
+  elements.print?.addEventListener("click", downloadResultPdf);
   elements.restart?.addEventListener("click", restartTool);
 
-  const existingToken = sessionStorage.getItem(storageKeys.token);
+  const existingToken = localStorage.getItem(storageKeys.token);
   if (existingToken && apiBase) {
-    setGateStatus("Restoring your private session…");
+    setGateStatus("Restoring your access on this device…");
     loadProtectedContent(existingToken).catch(() => {
-      sessionStorage.removeItem(storageKeys.token);
+      localStorage.removeItem(storageKeys.token);
       setGateStatus("Your previous session has expired. Enter your key again.", "error");
     });
   }
@@ -110,7 +110,7 @@
         throw new Error(data?.error || "That key could not be verified.");
       }
 
-      sessionStorage.setItem(storageKeys.token, data.token);
+      localStorage.setItem(storageKeys.token, data.token);
       setGateStatus("Access confirmed. Loading your clarity check…", "success");
       await loadProtectedContent(data.token);
     } catch (error) {
@@ -377,14 +377,162 @@
     }
   }
 
+  function downloadResultPdf() {
+    const PdfDocument = window.jspdf?.jsPDF;
+    if (!PdfDocument) {
+      window.alert("The PDF generator could not be loaded. Please check your connection and try again.");
+      return;
+    }
+
+    const button = elements.print;
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = "Creating your PDF…";
+
+    try {
+      const documentPdf = new PdfDocument({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        putOnlyUsedFonts: true,
+        compress: true
+      });
+      const pageWidth = documentPdf.internal.pageSize.getWidth();
+      const pageHeight = documentPdf.internal.pageSize.getHeight();
+      const margin = 18;
+      const contentWidth = pageWidth - (margin * 2);
+      const bottomLimit = pageHeight - 18;
+      let cursorY = 18;
+
+      const ensureRoom = (height) => {
+        if (cursorY + height <= bottomLimit) return;
+        documentPdf.addPage();
+        cursorY = 18;
+      };
+
+      const writeText = (value, options = {}) => {
+        const size = options.size || 11;
+        const lineHeight = size * 0.48;
+        const indent = options.indent || 0;
+        const width = contentWidth - indent;
+        const lines = documentPdf.splitTextToSize(pdfSafeText(value), width);
+        documentPdf.setFont("helvetica", options.bold ? "bold" : "normal");
+        documentPdf.setFontSize(size);
+        documentPdf.setTextColor(...(options.color || [40, 55, 59]));
+
+        lines.forEach((line) => {
+          ensureRoom(lineHeight);
+          documentPdf.text(line, margin + indent, cursorY);
+          cursorY += lineHeight;
+        });
+        cursorY += options.after ?? 3;
+      };
+
+      const writeSectionHeading = (heading) => {
+        ensureRoom(15);
+        cursorY += 3;
+        writeText(heading, { size: 13, bold: true, color: [18, 92, 88], after: 3 });
+      };
+
+      const writeList = (items, ordered = false) => {
+        items.forEach((item, index) => {
+          const size = 10.5;
+          const lineHeight = size * 0.48;
+          const prefix = ordered ? `${index + 1}.` : "-";
+          const lines = documentPdf.splitTextToSize(pdfSafeText(item), contentWidth - 9);
+          ensureRoom(lineHeight);
+          documentPdf.setFont("helvetica", "normal");
+          documentPdf.setFontSize(size);
+          documentPdf.setTextColor(52, 70, 74);
+          documentPdf.text(prefix, margin, cursorY);
+          lines.forEach((line) => {
+            ensureRoom(lineHeight);
+            documentPdf.text(line, margin + 8, cursorY);
+            cursorY += lineHeight;
+          });
+          cursorY += 2;
+        });
+      };
+
+      documentPdf.setProperties({
+        title: "Your Clarity Check - Text Him or Not?",
+        subject: "Private clarity check result",
+        author: "Pierre C. U. Singer",
+        creator: "Text Him or Not?"
+      });
+
+      writeText("TEXT HIM OR NOT?", { size: 10, bold: true, color: [18, 92, 88], after: 5 });
+      writeText("YOUR CLEAR ANSWER", { size: 9, bold: true, color: [145, 112, 43], after: 3 });
+      writeText(elements.resultTitle.textContent, { size: 22, bold: true, color: [20, 33, 38], after: 5 });
+      writeText(elements.resultSummary.textContent, { size: 12, color: [52, 70, 74], after: 5 });
+
+      writeSectionHeading("Why this is your result");
+      writeList(Array.from(elements.resultReasons.children, (item) => item.textContent));
+
+      writeSectionHeading("Your timing guidance");
+      writeText(elements.timing.textContent);
+
+      writeSectionHeading("Your next steps");
+      writeList(Array.from(elements.plan.children, (item) => item.textContent), true);
+
+      writeSectionHeading(elements.templateHeading.textContent || "A respectful message");
+      writeText(elements.template.textContent, { bold: true, color: [20, 75, 72] });
+      writeText(elements.templateNote.textContent, { size: 9.5, color: [75, 91, 95] });
+
+      const reflectionTerms = Array.from(elements.reflectionList.querySelectorAll("dt"));
+      const reflectionValues = Array.from(elements.reflectionList.querySelectorAll("dd"));
+      if (reflectionTerms.length) {
+        writeSectionHeading("What you clarified");
+        reflectionTerms.forEach((term, index) => {
+          writeText(term.textContent, { size: 10.5, bold: true, after: 1 });
+          writeText(reflectionValues[index]?.textContent || "", { size: 10.5, color: [52, 70, 74] });
+        });
+      }
+
+      writeSectionHeading("Important boundary");
+      writeText(elements.boundary.textContent, { bold: true, color: [145, 41, 68] });
+
+      writeSectionHeading("Keep this result in perspective");
+      writeText("This tool supports reflection and decision-making. It cannot know another person's thoughts and cannot guarantee a reply, reconciliation, or relationship outcome.", { size: 9.5, color: [75, 91, 95] });
+
+      const pageCount = documentPdf.getNumberOfPages();
+      for (let page = 1; page <= pageCount; page += 1) {
+        documentPdf.setPage(page);
+        documentPdf.setFont("helvetica", "normal");
+        documentPdf.setFontSize(8);
+        documentPdf.setTextColor(100, 112, 115);
+        documentPdf.text("Text Him or Not? | texthimornot.com", margin, pageHeight - 8);
+        documentPdf.text(`${page} / ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: "right" });
+      }
+
+      documentPdf.save("Your-Clarity-Check-Text-Him-or-Not.pdf");
+    } catch (error) {
+      console.error("PDF creation failed", error);
+      window.alert("The PDF could not be created. Please try again.");
+    } finally {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  }
+
+  function pdfSafeText(value) {
+    return String(value || "")
+      .replace(/\u00a0/g, " ")
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201c\u201d\u201e]/g, "\"")
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/\u2026/g, "...")
+      .replace(/[^\x09\x0a\x0d\x20-\x7e\u00a0-\u00ff]/g, "?");
+  }
+
   function restartTool() {
-    const confirmed = window.confirm("Start over and clear the answers saved in this browser session?");
+    const confirmed = window.confirm("Start over and clear the answers saved in this browser?");
     if (!confirmed) return;
     answers = {};
     reflections = {};
     currentIndex = 0;
     activeOutcome = null;
-    sessionStorage.removeItem(storageKeys.progress);
+    localStorage.removeItem(storageKeys.progress);
     showTool();
   }
 
@@ -394,7 +542,7 @@
   }
 
   function persistProgress() {
-    sessionStorage.setItem(storageKeys.progress, JSON.stringify({
+    localStorage.setItem(storageKeys.progress, JSON.stringify({
       currentIndex,
       answers,
       reflections,
@@ -404,14 +552,14 @@
 
   function restoreProgress() {
     try {
-      const saved = JSON.parse(sessionStorage.getItem(storageKeys.progress) || "null");
+      const saved = JSON.parse(localStorage.getItem(storageKeys.progress) || "null");
       if (!saved || typeof saved !== "object") return;
       currentIndex = Number.isFinite(saved.currentIndex) ? saved.currentIndex : 0;
       answers = saved.answers && typeof saved.answers === "object" ? saved.answers : {};
       reflections = saved.reflections && typeof saved.reflections === "object" ? saved.reflections : {};
       activeOutcome = typeof saved.activeOutcome === "string" ? saved.activeOutcome : null;
     } catch {
-      sessionStorage.removeItem(storageKeys.progress);
+      localStorage.removeItem(storageKeys.progress);
     }
   }
 

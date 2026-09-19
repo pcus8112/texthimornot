@@ -833,6 +833,25 @@ h3 {
   color: var(--paper-soft);
 }
 
+.key-reminder {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 24px;
+  padding: 16px;
+  border-left: 3px solid var(--gold);
+  background: rgba(239, 208, 137, 0.08);
+}
+
+.key-reminder strong {
+  color: var(--gold);
+}
+
+.key-reminder span {
+  color: var(--paper-soft);
+  font-size: 0.9rem;
+}
+
 .license-form {
   margin-top: 28px;
 }
