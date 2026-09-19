@@ -428,6 +428,11 @@
         cursorY += options.after ?? 3;
       };
 
+      const estimateTextHeight = (value, size = 11, width = contentWidth, after = 3) => {
+        const lines = documentPdf.splitTextToSize(pdfSafeText(value), width);
+        return (lines.length * size * 0.48) + after;
+      };
+
       const writeSectionHeading = (heading) => {
         ensureRoom(15);
         cursorY += 3;
@@ -484,13 +489,23 @@
       if (reflectionTerms.length) {
         writeSectionHeading("What you clarified");
         reflectionTerms.forEach((term, index) => {
+          const answer = reflectionValues[index]?.textContent || "";
+          const pairHeight = estimateTextHeight(term.textContent, 10.5, contentWidth, 1)
+            + estimateTextHeight(answer, 10.5, contentWidth, 3);
+          ensureRoom(pairHeight);
           writeText(term.textContent, { size: 10.5, bold: true, after: 1 });
-          writeText(reflectionValues[index]?.textContent || "", { size: 10.5, color: [52, 70, 74] });
+          writeText(answer, { size: 10.5, color: [52, 70, 74] });
         });
       }
 
-      writeSectionHeading("Important boundary");
-      writeText(elements.boundary.textContent, { bold: true, color: [145, 41, 68] });
+      const boundaryTitle = elements.boundary.querySelector("strong")?.textContent || "Important boundary";
+      const boundaryText = Array.from(elements.boundary.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent.trim())
+        .filter(Boolean)
+        .join(" ");
+      writeSectionHeading(boundaryTitle);
+      writeText(boundaryText, { bold: true, color: [145, 41, 68] });
 
       writeSectionHeading("Keep this result in perspective");
       writeText("This tool supports reflection and decision-making. It cannot know another person's thoughts and cannot guarantee a reply, reconciliation, or relationship outcome.", { size: 9.5, color: [75, 91, 95] });
@@ -520,7 +535,7 @@
       .replace(/\u00a0/g, " ")
       .replace(/[\u2018\u2019]/g, "'")
       .replace(/[\u201c\u201d\u201e]/g, "\"")
-      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/\s*[\u2013\u2014]\s*/g, " - ")
       .replace(/\u2026/g, "...")
       .replace(/[^\x09\x0a\x0d\x20-\x7e\u00a0-\u00ff]/g, "?");
   }
