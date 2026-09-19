@@ -8,9 +8,10 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Your Clarity Check | Text Him or Not?</title>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260919-2">
   <script src="../assets/config.js" defer></script>
-  <script src="../assets/tool.js" defer></script>
+  <script src="../assets/jspdf.umd.min.js?v=20260919-2" defer></script>
+  <script src="../assets/tool.js?v=20260919-2" defer></script>
 </head>
 <body class="tool-page">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -28,6 +29,10 @@
         <p class="eyebrow">Your private clarity check</p>
         <h1 id="access-title">Enter your access key</h1>
         <p>Your key was issued with your Payhip purchase. It unlocks the complete guided tool—no account or password required.</p>
+        <div class="key-reminder" role="note">
+          <strong>Important: keep your access key.</strong>
+          <span>Payhip sends your personal license key by email. Keep that email and store the key safely. You may need it again on a new device or browser, in private browsing, or after clearing your browser data.</span>
+        </div>
         <form id="license-form" class="license-form">
           <label for="license-key">Payhip access key</label>
           <input id="license-key" name="licenseKey" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" required>
@@ -123,7 +128,7 @@
       </div>
 
       <div class="result-actions no-print">
-        <button class="button button-primary" id="print-result" type="button">Save / print my result</button>
+        <button class="button button-primary" id="print-result" type="button">Download my result as PDF</button>
         <button class="button button-secondary" id="restart-tool" type="button">Start over</button>
       </div>
     </section>
