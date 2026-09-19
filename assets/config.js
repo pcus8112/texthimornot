@@ -4,7 +4,7 @@
  * creates it. No secret belongs in this public file.
  */
 window.TEXT_HIM_CONFIG = Object.freeze({
-  payhipUrl: "https://payhip.com/PierreCUSinger",
-  apiBaseUrl: "",
+  payhipUrl: "https://payhip.com/b/6qEcj",
+  apiBaseUrl: "https://text-him-or-not-access.pcus81.workers.dev",
   contactEmail: "contact@texthimornot.com"
 });
