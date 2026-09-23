@@ -3,8 +3,8 @@
 
   const config = window.TEXT_HIM_CONFIG || {};
   const apiBase = String(config.apiBaseUrl || "").replace(/\/$/, "");
-  const payhipUrl = config.payhipUrl || "https://payhip.com/PierreCUSinger";
-  const contactEmail = config.contactEmail || "contact@texthimornot.com";
+  const payhipUrl = config.payhipUrl || "https://payhip.com/b/6qEcj";
+  const contactEmail = config.contactEmail || "pcusinger@gmail.com";
   const storageKeys = {
     token: "textHimAccessToken",
     progress: "textHimToolProgress"
@@ -462,7 +462,7 @@
       documentPdf.setProperties({
         title: "Your Clarity Check - Text Him or Not?",
         subject: "Private clarity check result",
-        author: "Pierre C. U. Singer",
+        author: "Pierre Christian Ulrich Singer, Entrepreneur individuel (EI)",
         creator: "Text Him or Not?"
       });
 

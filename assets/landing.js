@@ -2,8 +2,8 @@
   "use strict";
 
   const config = window.TEXT_HIM_CONFIG || {};
-  const payhipUrl = config.payhipUrl || "https://payhip.com/PierreCUSinger";
-  const contactEmail = config.contactEmail || "contact@texthimornot.com";
+  const payhipUrl = config.payhipUrl || "https://payhip.com/b/6qEcj";
+  const contactEmail = config.contactEmail || "pcusinger@gmail.com";
 
   document.querySelectorAll("[data-payhip-link]").forEach((link) => {
     link.href = payhipUrl;

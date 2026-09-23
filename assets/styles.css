@@ -742,7 +742,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   gap: 18px;
-  max-width: 430px;
+  max-width: 560px;
   text-decoration: none;
 }
 
@@ -1309,6 +1309,27 @@ h3 {
 .legal-updated {
   color: var(--muted) !important;
   font-size: 0.9rem;
+}
+
+.legal-identity {
+  margin: 34px 0 48px;
+  padding: clamp(22px, 5vw, 34px);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius-md);
+  background: var(--ink-soft);
+}
+
+.legal-identity h2 {
+  margin-top: 0;
+}
+
+.legal-identity address {
+  color: var(--paper-soft);
+  font-style: normal;
+}
+
+.legal-identity p:last-child {
+  margin-bottom: 0;
 }
 
 @media (max-width: 920px) {
